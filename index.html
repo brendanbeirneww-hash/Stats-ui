@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Stats UI</title>
+<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+<style>
+    :root {
+        --primary-bg: #00303f;
+        --highlight: #c6e200;
+        --accent: #4b004b;
+        --font-color: #333;
+    }
+    body { font-family: 'Arial', sans-serif; margin: 0; background: #fff; color: var(--font-color); }
+    header { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: var(--primary-bg); color: #fff; }
+    header svg { width: 24px; height: 24px; fill: #fff; cursor: pointer; }
+    header div { font-size: 18px; font-weight: bold; }
+    .tabs { display: flex; justify-content: center; background: var(--primary-bg); padding: 10px 0; }
+    .tabs button { background: none; border: none; color: #fff; padding: 10px 20px; font-size: 14px; cursor: pointer; }
+    .tabs .active { background: var(--highlight); color: #000; border-radius: 4px; font-weight: bold; }
+    .date-selector { display: flex; justify-content: center; align-items: center; padding: 15px; font-weight: bold; font-size: 16px; }
+    .date-selector svg { width: 20px; height: 20px; fill: var(--font-color); cursor: pointer; }
+    .circle { width: 180px; height: 180px; border: 8px solid var(--accent); border-radius: 50%; margin: 20px auto; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; color: var(--accent); }
+    .circle span:nth-child(2) { font-size: 28px; }
+    .stats-row { display: flex; justify-content: space-around; padding: 15px; border-bottom: 1px solid #ddd; font-size: 14px; flex-wrap: wrap; }
+    .stat { text-align: center; flex: 1 1 30%; margin-bottom: 10px; }
+    .color-box { width: 10px; height: 10px; display: inline-block; margin-right: 5px; }
+    .grid { background: var(--accent); } .solar { background: #d2691e; } .public { background: #0077b6; }
+    .chart { padding: 15px; }
+    .chart h3 { font-size: 16px; margin-bottom: 10px; text-align: center; }
+    canvas { max-width: 90%; margin: auto; display: block; }
+    .bottom-nav { display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; background: #fff; position: fixed; bottom: 0; width: 100%; }
+    .bottom-nav div { text-align: center; font-size: 12px; flex: 1; }
+    .bottom-nav svg { width: 24px; height: 24px; display: block; margin: auto; fill: var(--font-color); }
+    .active-nav svg, .active-nav { fill: var(--accent); color: var(--accent); font-weight: bold; }
+    @media (max-width: 480px) { header div { font-size: 16px; } .circle { width: 150px; height: 150px; } .circle span:nth-child(2) { font-size: 22px; } .tabs button { font-size: 12px; padding: 8px 15px; } }
+</style>
+</head>
+<body>
+<header>
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M5 20h14v-2H5v2zm7-18l-5.5 5.5h4v6h3v-6h4L12 2z'/></svg>
+    <div>Stats</div>
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z'/></svg>
+</header>
+<div class='tabs'>
+    <button>WEEK</button>
+    <button class='active'>MONTH</button>
+    <button>YEAR</button>
+</div>
+<div class='date-selector'>
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z'/></svg>
+    OCTOBER 25
+    <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z'/></svg>
+</div>
+<div class='circle'>
+    <span>Total</span>
+    <span>94 kWh</span>
+    <span>£31.96</span>
+</div>
+<div class='stats-row'>
+    <div class='stat'><div>94 kWh</div><div>£31.96</div><div><span class='color-box grid'></span>Grid</div></div>
+    <div class='stat'><div>0 kWh</div><div>-</div><div><span class='color-box solar'></span>Solar</div></div>
+    <div class='stat'><div>0 kWh</div><div>£0.00</div><div><span class='color-box public'></span>Public</div></div>
+</div>
+<div class='chart'>
+    <h3>kWh added this month</h3>
+    <canvas id='monthChart'></canvas>
+</div>
+<div class='bottom-nav'>
+    <div><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 2l10 9h-3v11h-6v-7H11v7H5V11H2z'/></svg>Locate</div>
+    <div><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 3l8 8-1.41 1.41L18 11.83V19h-5v-4H11v4H6v-7.17l-1.59 1.58L3 11l9-8z'/></svg>At Home</div>
+    <div class='active-nav'><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 8h2v-2H7v2zm0-4h2v-2H7v2zm0-4h2V7H7v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2zm4 8h2v-2h-2v2zm0-4h2v-2h-2v2zm0-4h2V7h-2v2z'/></svg>Stats</div>
+    <div><svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/></svg>Account</div>
+</div>
+<script>
+const ctx = document.getElementById('monthChart').getContext('2d');
+new Chart(ctx, { type: 'bar', data: { labels: ['1','7','14','21','28'], datasets: [{ label: 'kWh', data: [0,0,50,35,0], backgroundColor: '#4b004b' }] }, options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 10 } } } } });
+</script>
+</body>
+</html>
